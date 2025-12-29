@@ -1,26 +1,18 @@
 'use server';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GenerateResponse } from '../types/response';
 
-// 1. Definisikan Tipe Data Balikan (Agar TypeScript Paham)
-export interface GenerateResponse {
-  success: boolean;
-  data?: string | null;
-  error?: string | null;
-}
-
-// 2. Pasang tipe ini di fungsi
 export async function generateCoverLetter(formData: FormData): Promise<GenerateResponse> {
   try {
-    console.log('--- Memulai Generasi Cover Letter (Gemini 2.0 Flash) ---');
+    console.log('--- Memulai Generasi Cover Letter (Gemini 2.5 Flash) ---');
 
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) throw new Error("API Key hilang");
     
     const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Pastikan model ini sesuai dengan list yang Anda punya (gemini-2.0-flash)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const file = formData.get('resume') as File;
     const jobDescription = formData.get('jobDescription') as string;

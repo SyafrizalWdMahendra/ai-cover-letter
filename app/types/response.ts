@@ -1,0 +1,6 @@
+export interface GenerateResponse {
+    success: boolean;
+    data?: string | null;
+    error?: string | null;
+}
+
