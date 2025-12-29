@@ -1,36 +1,41 @@
 'use server';
+
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-type GenerateResponse = 
-  | { success: true; data: string }
-  | { success: false; error: string };
+// 1. Definisikan Tipe Data Balikan (Agar TypeScript Paham)
+export interface GenerateResponse {
+  success: boolean;
+  data?: string | null;
+  error?: string | null;
+}
 
+// 2. Pasang tipe ini di fungsi
 export async function generateCoverLetter(formData: FormData): Promise<GenerateResponse> {
   try {
+    console.log('--- Memulai Generasi Cover Letter (Gemini 2.0 Flash) ---');
+
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Google Generative AI API key is missing. Set GOOGLE_GENERATIVE_AI_API_KEY in .env.local.');
-    }
-
+    if (!apiKey) throw new Error("API Key hilang");
+    
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+    
+    // Pastikan model ini sesuai dengan list yang Anda punya (gemini-2.0-flash)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    // Ambil data dari form
-    const file = formData.get('resume') as File | null;
-    const jobDescription = formData.get('jobDescription') as string | null;
-    const jobTitle = formData.get('jobTitle') as string | null;
-    const companyName = formData.get('companyName') as string | null;
+    const file = formData.get('resume') as File;
+    const jobDescription = formData.get('jobDescription') as string;
+    const jobTitle = formData.get('jobTitle') as string;
+    const companyName = formData.get('companyName') as string;
 
     if (!file || !jobDescription) {
-      throw new Error('Resume (PDF) dan Job Description wajib diisi.');
+      throw new Error('Resume dan Job Description wajib diisi');
     }
 
-    // Konversi PDF ke Base64
+    console.log('Mengkonversi PDF ke Base64...');
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64Data = buffer.toString('base64');
 
-    // Prompt untuk Gemini
     const promptText = `
       JOB CONTEXT:
       Role: ${jobTitle}
@@ -49,14 +54,14 @@ export async function generateCoverLetter(formData: FormData): Promise<GenerateR
       6. IMPORTANT: Do NOT leave any bracketed placeholders like [Your Name] or [Date]. Fill them with real data from the PDF or today's date.
     `;
 
-    console.log('Mengirim data ke Gemini (model: gemini-flash-latest)...');
-
+    console.log('Mengirim data ke Gemini 2.0...');
+    
     const result = await model.generateContent([
       promptText,
       {
         inlineData: {
           data: base64Data,
-          mimeType: 'application/pdf',
+          mimeType: "application/pdf",
         },
       },
     ]);
@@ -64,10 +69,17 @@ export async function generateCoverLetter(formData: FormData): Promise<GenerateR
     const response = await result.response;
     const text = response.text();
 
-    console.log('--- Selesai generate cover letter ---');
-    return { success: true, data: text };
+    console.log('--- Selesai! ---');
+    
+    // PERBAIKAN DI SINI:
+    // Kembalikan error: null agar strukturnya konsisten
+    return { success: true, data: text, error: null };
+
   } catch (error: any) {
     console.error('Error generating cover letter:', error);
-    return { success: false, error: error.message ?? 'Unknown error' };
+    
+    // PERBAIKAN DI SINI:
+    // Kembalikan data: null agar strukturnya konsisten
+    return { success: false, data: null, error: error.message || 'Terjadi kesalahan sistem' };
   }
 }

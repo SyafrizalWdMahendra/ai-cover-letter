@@ -7,14 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Sparkles, Upload, FileText, CheckCircle } from 'lucide-react'; // Tambah icon
+import { Loader2, Sparkles, Upload, CheckCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export default function Home() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<string>('');
-  
-  // STATE BARU: Untuk menyimpan nama file yang diupload
   const [fileName, setFileName] = useState<string>('');
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -26,12 +24,11 @@ export default function Home() {
       if (response.success && response.data) {
         setResult(response.data);
       } else {
-        alert('Gagal generate: ' + response.error);
+        alert('Gagal generate: ' + (response.error ?? 'Terjadi kesalahan'));
       }
     });
   }
 
-  // HANDLER BARU: Saat user memilih file
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
         setFileName(e.target.files[0].name);
@@ -42,7 +39,6 @@ export default function Home() {
     <main className="min-h-screen bg-slate-50 p-8 font-sans">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {/* KOLOM KIRI: INPUT FORM */}
         <Card className="h-fit shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -78,20 +74,17 @@ export default function Home() {
               <div className="space-y-2">
                 <Label htmlFor="resume">Upload CV / Resume (PDF)</Label>
                 
-                {/* MODIFIKASI AREA UPLOAD */}
                 <div className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition cursor-pointer relative ${
                     fileName ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:bg-slate-50'
                 }`}>
                   
                   {fileName ? (
-                      // TAMPILAN JIKA FILE SUDAH DIPILIH
                       <div className="flex flex-col items-center text-blue-600 animate-in fade-in zoom-in duration-300">
                           <CheckCircle className="w-8 h-8 mb-2" />
                           <p className="font-semibold text-sm text-center break-all">{fileName}</p>
                           <p className="text-xs text-blue-400 mt-1">Klik untuk ganti file</p>
                       </div>
                   ) : (
-                      // TAMPILAN DEFAULT
                       <div className="flex flex-col items-center text-slate-500">
                           <Upload className="w-8 h-8 mb-2" />
                           <span className="text-sm">Klik untuk upload PDF</span>
@@ -104,7 +97,7 @@ export default function Home() {
                     type="file" 
                     accept=".pdf" 
                     className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={handleFileChange} // Hubungkan handler disini
+                    onChange={handleFileChange} 
                     required 
                   />
                 </div>
@@ -124,7 +117,6 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* KOLOM KANAN: HASIL OUTPUT */}
         <Card className="h-full min-h-[500px] shadow-lg bg-white">
           <CardHeader className="border-b bg-slate-50/50">
             <CardTitle className="text-slate-700">Hasil Surat Lamaran</CardTitle>
