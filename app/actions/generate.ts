@@ -3,7 +3,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { GenerateResponse } from '../types/response';
-import { prisma } from './prisma';
+import prisma from '@/lib/prisma';
 
 export async function generateCoverLetter(formData: FormData): Promise<GenerateResponse> {
   try {
