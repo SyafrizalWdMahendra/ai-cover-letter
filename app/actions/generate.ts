@@ -1,17 +1,44 @@
 'use server';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { GenerateResponse } from '../types/response';
+import { prisma } from './prisma';
 
 export async function generateCoverLetter(formData: FormData): Promise<GenerateResponse> {
   try {
-    console.log('--- Memulai Generasi Cover Letter (Gemini 2.5 Flash) ---');
+    const { userId } = await auth();
+    const user = await currentUser();
+
+    if (!userId || !user) {
+      return { success: false, data: null, error: 'Anda harus login terlebih dahulu.' };
+    }
+
+    let dbUser = await prisma.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+
+    if (!dbUser) {
+      dbUser = await prisma.user.create({
+        data: {
+          clerkUserId: userId,
+          email: user.emailAddresses[0].emailAddress,
+          credits: 3,
+        },
+      });
+    }
+
+    if (dbUser.credits <= 0) {
+      return { 
+        success: false, 
+        data: null, 
+        error: 'Kredit habis! Silakan top-up untuk melanjutkan.' 
+      };
+    }
 
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) throw new Error("API Key hilang");
-    
     const genAI = new GoogleGenerativeAI(apiKey);
-
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const file = formData.get('resume') as File;
@@ -19,11 +46,8 @@ export async function generateCoverLetter(formData: FormData): Promise<GenerateR
     const jobTitle = formData.get('jobTitle') as string;
     const companyName = formData.get('companyName') as string;
 
-    if (!file || !jobDescription) {
-      throw new Error('Resume dan Job Description wajib diisi');
-    }
+    if (!file || !jobDescription) throw new Error('Data tidak lengkap');
 
-    console.log('Mengkonversi PDF ke Base64...');
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64Data = buffer.toString('base64');
@@ -45,33 +69,23 @@ export async function generateCoverLetter(formData: FormData): Promise<GenerateR
       5. FORMAT: Use standard business letter format.
       6. IMPORTANT: Do NOT leave any bracketed placeholders like [Your Name] or [Date]. Fill them with real data from the PDF or today's date.
     `;
-
-    console.log('Mengirim data ke Gemini 2.0...');
     
     const result = await model.generateContent([
-      promptText,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: "application/pdf",
-        },
-      },
+      promptText, 
+      { inlineData: { data: base64Data, mimeType: "application/pdf" } }
     ]);
-
     const response = await result.response;
     const text = response.text();
 
-    console.log('--- Selesai! ---');
-    
-    // PERBAIKAN DI SINI:
-    // Kembalikan error: null agar strukturnya konsisten
+    await prisma.user.update({
+      where: { id: dbUser.id },
+      data: { credits: dbUser.credits - 1 },
+    });
+
     return { success: true, data: text, error: null };
 
   } catch (error: any) {
-    console.error('Error generating cover letter:', error);
-    
-    // PERBAIKAN DI SINI:
-    // Kembalikan data: null agar strukturnya konsisten
+    console.error('Error:', error);
     return { success: false, data: null, error: error.message || 'Terjadi kesalahan sistem' };
   }
 }

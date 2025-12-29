@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sparkles, Upload, CheckCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { SignedIn, SignedOut, UserButton, SignInButton } from '@clerk/nextjs';
 
 export default function Home() {
   const [isPending, startTransition] = useTransition();
@@ -40,11 +41,22 @@ export default function Home() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
         <Card className="h-fit shadow-lg">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-blue-600" />
               AI Cover Letter Generator
             </CardTitle>
+            
+            <div>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button variant="outline" size="sm">Login / Daftar</Button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
