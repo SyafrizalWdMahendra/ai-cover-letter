@@ -13,4 +13,17 @@ model User {
   credits      Int      @default(3) 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  coverLetters CoverLetter[]
+}
+
+model CoverLetter {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String   @db.Text
+  jobTitle  String
+  company   String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
