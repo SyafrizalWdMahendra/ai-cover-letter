@@ -1,16 +1,14 @@
-"use client";
-import { useState } from "react";
+import { toast } from "sonner";
 
-export const handleCopy = () => {
-  const [result, setResult] = useState<string>("");
-  if (result) {
-    navigator.clipboard
-      .writeText(result)
-      .then(() => {
-        alert("Teks berhasil disalin!");
-      })
-      .catch((err) => {
-        console.error("Gagal menyalin: ", err);
-      });
-  }
+export const handleCopy = (text: string) => {
+  if (!text) return;
+
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      toast.success("Berhasil disalin!");
+    })
+    .catch((err) => {
+      console.log("Gagal menyalin: ", err);
+    });
 };

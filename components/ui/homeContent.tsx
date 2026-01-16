@@ -139,7 +139,7 @@ export default function HomeContent({ creditCounterSlot }: TCreditCounterSlot) {
           <div
             className="p-2 hover:cursor-pointer hover:bg-secondary rounded-full"
             onClick={() => {
-              handleCopy();
+              handleCopy(result || "");
             }}
             title="Salin Hasil"
           >
