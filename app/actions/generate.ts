@@ -117,6 +117,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { GenerateResponse } from "../types/response";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 export async function generateCoverLetter(
   formData: FormData
@@ -158,7 +159,7 @@ export async function generateCoverLetter(
         data: {
           clerkUserId: userId,
           email: emailUser,
-          credits: 3, 
+          credits: 3,
         },
       });
     }
@@ -228,6 +229,8 @@ export async function generateCoverLetter(
         data: { credits: { decrement: 1 } },
       });
     });
+
+    revalidatePath("/");
 
     return { success: true, data: text, error: null };
   } catch (error: any) {
